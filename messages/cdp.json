@@ -1,0 +1,35 @@
+{
+  "privateKeyDescription":"Location for the private key configured for the digital certificate in the connected app",
+  "clientIdDescription":"Client Id for the Connected App in Setup",
+  "loginUrlDescription":"Login URL",
+  "usernameDescription":"Salesforce username (should have the right CDP permissions configured)",
+
+  "export-commandDescription": "Export data into a CSV based on the query provided",
+  "export-queryFlagDescription": "SQL Query to run",
+  "export-batchSizeFlagDescription": "Number of records per batch",
+  "export-fileLocFlagDescription": "Path to store the CSV file",
+  "export-examples": [
+    "sfdx cdp:export --targetusername myOrg@example.com --query select * from Account"
+  ],
+  "meta-commandDescription":"Get CDP Metadata",
+  "meta-filterDescription":"Comma separated list of objects to extrcat metadata for",
+  "meta-typeDescription":"Ouput Entity information or Entity field information",
+  "meta-examples": [
+    "sfdx cdp:metadata --username myOrg@example.com --clientid <Connected_App_ClientId> -loginurl <your org's login url> --privatekey <absolute path to your private key> --objects <comma separate list of objects> --type [FIELDS|ENTITY] "
+  ],
+  "ingest-commandDescription":"Ingest data into a Entity from a CSV in Bulk or Streaming mode",
+  "ingest-inputFileDescription":"Absolute location of the CSV file",
+  "ingest-modeDescription":"Ingestion mode: STREAM (default)| BULK",
+  "ingest-entityDescription":"Entity the data needs to be loaded",
+  "ingest-batchSizeDescription":"Batch size per request. Applicable only for STREAM mode. Default: 50",
+  "ingest-connectorDescription":"Data source connector name",
+  "ingest-examples": [
+    "sfdx cdp:metadata --username myOrg@example.com --clientid <Connected_App_ClientId> -loginurl <your org's login url> --privatekey <absolute path to your private key> --inputfile ./sample.csv --mode STREAM --entity Account__dlm --connector Sample_API_Connector"
+  ],
+  "query-commandDescription":"Execute a CDP ANSI SQL Query",
+  "query-queryDescription":"SQL Query to execute",
+  "query-examples": [
+    "sfdx cdp:metadata --username myOrg@example.com --clientid <Connected_App_ClientId> -loginurl <your org's login url> --privatekey <absolute path to your private key> --query <SQL Query>"
+  ]
+
+}
