@@ -10,6 +10,17 @@ A collection of SFDX plugins to interact with Salesforce CDP. The following plug
 - `export` : To export data from a SQL query as a CSV file
 - `ingest` : To send data using the streaming ingestion API for CDP
 
+## Installation
+
+1. Clone this git repo : `git clone https://github.com/anandbn/sfdx-cdp-plugins`
+2. Run `sfdx plugins:link` from the repo folder after you have cloned
+```
+cd sfdx-cdp-plugins
+sfdx plugins:link
+```
+
+To test if the plugin was installed correctly. run `sfdx cdp:login --help` which should display the help for that plugin
+
 ## Common parameters
 
 All plugins use the following common parameters:
