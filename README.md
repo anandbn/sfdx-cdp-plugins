@@ -35,7 +35,10 @@ All plugins use the following common parameters:
 ### Usage
 
 ```
-sfdx cdp:login --username your_org_username@example.com --clientid "3MVG9.." --loginurl "https://login.salesforce.com" --privatekey [absoluate path to your private key file]
+sfdx cdp:login --username your_org_username@example.com 
+               --clientid "3MVG9.." 
+               --loginurl "https://login.salesforce.com" 
+               --privatekey [absolute path to your private key file]
 
 ```
 
