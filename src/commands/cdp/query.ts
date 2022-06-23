@@ -9,6 +9,7 @@ import { flags, SfdxCommand, TableOptions } from '@salesforce/command';
 import { Messages } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
 const axios = require('axios').default;
+const YAML = require('yaml')
 
 const jwt = require('jsonwebtoken');
 const url = require('url');

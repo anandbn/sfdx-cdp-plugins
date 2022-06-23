@@ -8,6 +8,7 @@ import * as os from 'os';
 import { flags, SfdxCommand, TableOptions } from '@salesforce/command';
 import { Messages } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
+import { relativeTimeThreshold } from 'moment';
 const axios = require('axios').default;
 const fs = require('fs');
 
@@ -23,10 +24,10 @@ Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('sfdx-cdp', 'cdp');
 
 
-export default class Metadata extends SfdxCommand {
-  public static description = messages.getMessage('meta-commandDescription');
+export default class Login extends SfdxCommand {
+  public static description = messages.getMessage('login-commandDescription');
 
-  public static examples = messages.getMessage('meta-examples').split(os.EOL);
+  public static examples = messages.getMessage('login-examples').split(os.EOL);
 
   public static args = [{ name: 'file' }];
 
@@ -53,16 +54,6 @@ export default class Metadata extends SfdxCommand {
       char: 'k',
       description: messages.getMessage('privateKeyDescription'),
       required: true
-    }),
-    type: flags.enum({
-      char: 't',
-      description: messages.getMessage('meta-typeDescription'),
-      options:['FIELD','ENTITY'],
-      default:'FIELD'
-    }),
-    filters: flags.array({
-      char: 'f',
-      description: messages.getMessage('meta-filterDescription'),
     })
   };
 
@@ -87,25 +78,20 @@ export default class Metadata extends SfdxCommand {
     };
 
     var token = jwt.sign(jwtparams, privateKey, { algorithm: 'RS256' });
-
     var params = {
       grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
       assertion: token
     };
 
     var tokenUrl = new url.URL('/services/oauth2/token', this.flags.loginurl).toString();
-
+    this.ux.log(`JWT Token URL ${tokenUrl}`);
     let coreApiToken = await this.getCoreApiJWTAccessToken(tokenUrl,params);
-    let cdpAccesToken = await this.getC360AccessToken(coreApiToken);
-    let metadataRes = await this.getC360Metadata(cdpAccesToken);
-    if(this.flags.type == 'FIELD'){
-      return this.extractFields(metadataRes.metadata);
-    }
-    if(this.flags.type == 'ENTITY'){
-      return this.extractEntities(metadataRes.metadata);
-    }
+    this.ux.log(`Authenticated into core API : Response : \n ${JSON.stringify(coreApiToken)}`);
+    let cdpAccessToken = await this.getC360AccessToken(coreApiToken);
+    this.ux.log(`Exchanged Core token for CDP token : Response : \n ${JSON.stringify(cdpAccessToken)}`);
+    
     // Return an object to be displayed with --json
-    return metadataRes;
+    return cdpAccessToken;
   }
   private async getCoreApiJWTAccessToken(tokenUrl, params) {
     try{
@@ -141,86 +127,4 @@ export default class Metadata extends SfdxCommand {
 
   }
 
-
-  private async getC360Metadata(cdpToken) {
-    let apiEndpoint = `https://${cdpToken.instance_url}/api/v1/metadata/`;
-    let response = await axios.get(apiEndpoint, {
-      headers: {
-        "Authorization": `Bearer ${cdpToken.access_token}`
-      }
-    });
-    if (response.status == 200) {
-      return response.data;
-    } else {
-      return null;
-    }
-  }
-
-  private async extractFields(entities) {
-    let entityFields:any[] = new Array();
-    for(let i=0;i<entities.length;i++)
-    {
-      let entity = entities[i];
-      if(this.flags.filters == null || (this.flags.filters !=null && this.isEntityOrFieldInFilter(entity.displayName,entity.name))){
-        if(entity.fields && entity.fields.length>0){
-          for(let entityField of entity.fields){
-            if(this.flags.filters == null || (this.flags.filters !=null && this.isEntityOrFieldInFilter(entityField.displayName,entityField.name))){
-              entityFields.push({
-                entityName:entity.displayName,
-                fieldName:entityField.displayName,
-                fieldType:entityField.type,
-                fieldApiName:entityField.name,
-              });
-            }
-          }
-        }
-      }
-
-    }
-    let tableColumns:TableOptions = {
-      columns:[
-      {key:'entityName',label: 'Entity name'},
-      {key:'fieldName',label : 'Field name'},
-      {key:'fieldType',label : 'Datatype'},
-      {key:'fieldApiName',label : 'API Name'},
-    ]};
-
-    this.ux.table(entityFields,tableColumns);
-    return entityFields;
-  }
-
-  private async extractEntities(entities) {
-    let allEntities:any[] = new Array();
-    for(let i=0;i<entities.length;i++)
-    {
-      let entity = entities[i];
-      if(this.flags.filters == null || (this.flags.filters !=null && this.isEntityOrFieldInFilter(entity.displayName,entity.name))){
-          allEntities.push({
-            entityName:entity.displayName,
-            entityApiName:entity.name,
-            entityType:entity.name.substring(entity.name.length-3,entity.name.length)
-          });
-      }
-
-    }
-    let tableColumns:TableOptions = {
-      columns:[
-      {key:'entityName',label: 'Entity name'},
-      {key:'entityApiName',label : 'API Name'},
-      {key:'entityType',label : 'Entity type'},
-    ]};
-
-    this.ux.table(allEntities,tableColumns);
-    return allEntities;
-  }
-
-  private isEntityOrFieldInFilter(name,apiName){
-    let filterMatch:boolean = false;
-    this.flags.filters.forEach(filter => {
-      if(!filterMatch){
-        filterMatch = name.includes(filter) || apiName.includes(filter);
-      }
-    });
-    return filterMatch;
-  }
 }

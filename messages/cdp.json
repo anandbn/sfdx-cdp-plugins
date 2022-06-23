@@ -8,6 +8,7 @@
   "export-queryFlagDescription": "SQL Query to run",
   "export-batchSizeFlagDescription": "Number of records per batch",
   "export-fileLocFlagDescription": "Path to store the CSV file",
+  "export-entityFlagDescription": "Entity to use as the source for columns to export",
   "export-examples": [
     "sfdx cdp:export --targetusername myOrg@example.com --query select * from Account"
   ],
@@ -30,6 +31,11 @@
   "query-queryDescription":"SQL Query to execute",
   "query-examples": [
     "sfdx cdp:metadata --username myOrg@example.com --clientid <Connected_App_ClientId> -loginurl <your org's login url> --privatekey <absolute path to your private key> --query <SQL Query>"
+  ],
+  "login-commandDescription":"Do a Login using the client id and private key",
+  "login-examples": [
+    "sfdx cdp:login --username myOrg@example.com --clientid <Connected_App_ClientId> -loginurl <your org's login url> --privatekey <absolute path to your private key>"
   ]
+
 
 }

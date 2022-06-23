@@ -1,41 +1,51 @@
-cdp-data-export
+cdp-plugins
 ===============
 
 
 
-[![Version](https://img.shields.io/npm/v/cdp-data-export.svg)](https://npmjs.org/package/cdp-data-export)
-[![CircleCI](https://circleci.com/gh/anandbn/cdp-data-export/tree/master.svg?style=shield)](https://circleci.com/gh/anandbn/cdp-data-export/tree/master)
-[![Appveyor CI](https://ci.appveyor.com/api/projects/status/github/anandbn/cdp-data-export?branch=master&svg=true)](https://ci.appveyor.com/project/heroku/cdp-data-export/branch/master)
-[![Greenkeeper](https://badges.greenkeeper.io/anandbn/cdp-data-export.svg)](https://greenkeeper.io/)
-[![Known Vulnerabilities](https://snyk.io/test/github/anandbn/cdp-data-export/badge.svg)](https://snyk.io/test/github/anandbn/cdp-data-export)
-[![Downloads/week](https://img.shields.io/npm/dw/cdp-data-export.svg)](https://npmjs.org/package/cdp-data-export)
-[![License](https://img.shields.io/npm/l/cdp-data-export.svg)](https://github.com/anandbn/cdp-data-export/blob/master/package.json)
+A collection of SFDX plugins to interact with Salesforce CDP. The following plugins are available:
 
-<!-- toc -->
-<!-- install -->
-<!-- usage -->
-<!-- commands -->
-<!-- debugging-your-plugin -->
-# Debugging your plugin
-We recommend using the Visual Studio Code (VS Code) IDE for your plugin development. Included in the `.vscode` directory of this plugin is a `launch.json` config file, which allows you to attach a debugger to the node process when running your commands.
+- `login` : A way to test CDP login using a private key 
+- `metadata` : To fetch metadata in CDP
+- `export` : To export data from a SQL query as a CSV file
+- `ingest` : To send data using the streaming ingestion API for CDP
 
-To debug the `hello:org` command: 
-1. Start the inspector
-  
-If you linked your plugin to the sfdx cli, call your command with the `dev-suspend` switch: 
-```sh-session
-$ sfdx hello:org -u myOrg@example.com --dev-suspend
+## Common parameters
+
+All plugins use the following common parameters:
+
+- `--clientid` / `-c` : THe connected app client id from salesforce setup. __Note__: this connection app should have the right scopes as well as ...
+- `--loginurl` / `-r` : Login URL for your instance
+- `--privatekey`  / `-k` : Private key file that will be used in the OAuth JWT tokene exchange.
+- `--username` / `-u` : The username to use in the JWT token exchange
+
+## `login`
+
+### Usage
+
 ```
-  
-Alternatively, to call your command using the `bin/run` script, set the `NODE_OPTIONS` environment variable to `--inspect-brk` when starting the debugger:
-```sh-session
-$ NODE_OPTIONS=--inspect-brk bin/run hello:org -u myOrg@example.com
+sfdx cdp:login --username your_org_username@example.com --clientid "3MVG9.." --loginurl "https://login.salesforce.com" --privatekey [absoluate path to your private key file]
+
 ```
 
-2. Set some breakpoints in your command code
-3. Click on the Debug icon in the Activity Bar on the side of VS Code to open up the Debug view.
-4. In the upper left hand corner of VS Code, verify that the "Attach to Remote" launch configuration has been chosen.
-5. Hit the green play button to the left of the "Attach to Remote" launch configuration window. The debugger should now be suspended on the first line of the program. 
-6. Hit the green play button at the top middle of VS Code (this play button will be to the right of the play button that you clicked in step #5).
-<br><img src=".images/vscodeScreenshot.png" width="480" height="278"><br>
-Congrats, you are debugging!
+### Examples
+
+
+## `metadata`
+
+### Usage
+
+### Examples
+
+
+## `export`
+
+### Usage
+
+### Examples
+
+## `ingest`
+
+### Usage
+
+### Examples
