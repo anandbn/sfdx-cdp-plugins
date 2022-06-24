@@ -30,6 +30,14 @@ All plugins use the following common parameters:
 - `--privatekey`  / `-k` : Private key file that will be used in the OAuth JWT tokene exchange.
 - `--username` / `-u` : The username to use in the JWT token exchange
 
+__Note__: Ensure that the connected app that you are configuring has the scope set to `cdp_query_api cdp_ingest_api cdpquery api cdp_profile_api cdpprofile` amongst other scopes that you might need. Without these scopes included, CDP API operations will not work.
+
+Refer to [Setting up connected app](https://help.salesforce.com/articleView?id=sf.connected_app_create.htm&type=5&language=en_US) for more details on how to configure connected app.
+
+Refer to [Oauth JWT Bearer flow](https://help.salesforce.com/articleView?id=remoteaccess_oauth_jwt_flow.htm&language=en_US) for more information on how the private key/certificate should be configured. The plugins here uses this flow and fetches the `access_token`
+
+Refer to [Salesforce CDP API Authentication](https://developer.salesforce.com/docs/atlas.en-us.c360a_api.meta/c360a_api/c360a_getting_started_with_cdp.htm) on how the `access_token` is exchanged for a `cdp_access_token`
+
 ## `login`
 
 ### Usage

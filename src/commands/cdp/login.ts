@@ -8,11 +8,7 @@ import * as os from 'os';
 import { flags, SfdxCommand, TableOptions } from '@salesforce/command';
 import { Messages } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
-import { relativeTimeThreshold } from 'moment';
-const axios = require('axios').default;
-const fs = require('fs');
-
-const jwt = require('jsonwebtoken');
+import CDPUtils  from '../../shared/cdputils';
 const url = require('url');
 
 // Initialize Messages with the current plugin directory
@@ -67,64 +63,46 @@ export default class Login extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
-    const clientId = this.flags.clientid;
-    const privateKey = require('fs').readFileSync(this.flags.privatekey, 'utf8');
 
-    var jwtparams = {
-      iss: clientId,
-      prn: this.flags.username,
-      aud: this.flags.loginurl,
-      exp: (Math.floor(Date.now() / 1000) + (60 * 3))
-    };
-
-    var token = jwt.sign(jwtparams, privateKey, { algorithm: 'RS256' });
-    var params = {
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion: token
-    };
+    var params = CDPUtils.getJwtParams(this.flags);
 
     var tokenUrl = new url.URL('/services/oauth2/token', this.flags.loginurl).toString();
     this.ux.log(`JWT Token URL ${tokenUrl}`);
-    let coreApiToken = await this.getCoreApiJWTAccessToken(tokenUrl,params);
-    this.ux.log(`Authenticated into core API : Response : \n ${JSON.stringify(coreApiToken)}`);
-    let cdpAccessToken = await this.getC360AccessToken(coreApiToken);
-    this.ux.log(`Exchanged Core token for CDP token : Response : \n ${JSON.stringify(cdpAccessToken)}`);
-    
-    // Return an object to be displayed with --json
-    return cdpAccessToken;
-  }
-  private async getCoreApiJWTAccessToken(tokenUrl, params) {
     try{
-      let urlParams = new url.URLSearchParams(params);
-      let response = await axios.post(tokenUrl, urlParams.toString());
-      if (response.status == 200) {
-        return response.data;
-      } else {
-        return null;
-      }
+      let coreApiToken = await CDPUtils.getCoreApiJWTAccessToken(tokenUrl,params);
+
+      let tableColumns:TableOptions = {
+        columns:[
+        {key:'field',label: 'Response field'},      
+        {key:'value',label: 'Value'},      
+      ]};
+      let apiRespData:any[] = new Array();
+      apiRespData.push({"field":"scope","value":coreApiToken.scope})
+      apiRespData.push({"field":"instance_url","value":coreApiToken.instance_url})
+      apiRespData.push({"field":"token_type","value":coreApiToken.token_type})
+      apiRespData.push({"field":"id","value":coreApiToken.id})
+      apiRespData.push({"field":"access_token","value":`${coreApiToken.access_token.substring(0,20)}..`});
+  
+      this.ux.log(`\n\nAuthenticated into core API\n`);
+      this.ux.table(apiRespData,tableColumns);
+      let cdpAccessToken = await CDPUtils.getC360AccessToken(coreApiToken);
+  
+      this.ux.log(`\n\nExchanged access_token for cdp_access_token\n`);
+      apiRespData  = new Array();
+      apiRespData.push({"field":"instance_url","value":cdpAccessToken.instance_url})
+      apiRespData.push({"field":"token_type","value":cdpAccessToken.token_type})
+      apiRespData.push({"field":"issued_token_type","value":cdpAccessToken.issued_token_type})
+      apiRespData.push({"field":"expires_in","value":cdpAccessToken.expires_in});
+      apiRespData.push({"field":"access_token","value":`${cdpAccessToken.access_token.substring(0,20)}...`});
+  
+      this.ux.table(apiRespData,tableColumns);
+      return cdpAccessToken;
+  
     }catch(error){
-      this.ux.error(error.message);
-      return null;
+      this.ux.error(`Error logging in:\n ${JSON.stringify(error.response,null,4)}`);
+      return error;
     }
-
   }
 
-
-  private async getC360AccessToken(coreApiToken) {
-    let params = {
-      "grant_type": "urn:salesforce:grant-type:external:cdp",
-      "subject_token": coreApiToken.access_token,
-      "subject_token_type": "urn:ietf:params:oauth:token-type:access_token"
-    }
-    let urlParams = new url.URLSearchParams(params);
-    let tokenUrl = `${coreApiToken.instance_url}/services/a360/token`;
-    let response = await axios.post(tokenUrl, urlParams.toString());
-    if (response.status == 200) {
-      return response.data;
-    } else {
-      return null;
-    }
-
-  }
 
 }

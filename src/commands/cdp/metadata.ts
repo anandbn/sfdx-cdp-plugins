@@ -9,10 +9,8 @@ import { flags, SfdxCommand, TableOptions } from '@salesforce/command';
 import { Messages } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
 const axios = require('axios').default;
-const fs = require('fs');
-
-const jwt = require('jsonwebtoken');
 const url = require('url');
+import CDPUtils  from '../../shared/cdputils';
 
 // Initialize Messages with the current plugin directory
 Messages.importMessagesDirectory(__dirname);
@@ -76,28 +74,13 @@ export default class Metadata extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
-    const clientId = this.flags.clientid;
-    const privateKey = require('fs').readFileSync(this.flags.privatekey, 'utf8');
-
-    var jwtparams = {
-      iss: clientId,
-      prn: this.flags.username,
-      aud: this.flags.loginurl,
-      exp: (Math.floor(Date.now() / 1000) + (60 * 3))
-    };
-
-    var token = jwt.sign(jwtparams, privateKey, { algorithm: 'RS256' });
-
-    var params = {
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion: token
-    };
+    var params = CDPUtils.getJwtParams(this.flags);
 
     var tokenUrl = new url.URL('/services/oauth2/token', this.flags.loginurl).toString();
 
-    let coreApiToken = await this.getCoreApiJWTAccessToken(tokenUrl,params);
-    let cdpAccesToken = await this.getC360AccessToken(coreApiToken);
-    let metadataRes = await this.getC360Metadata(cdpAccesToken);
+    let coreApiToken = await CDPUtils.getCoreApiJWTAccessToken(tokenUrl,params);
+    let cdpAccesToken = await CDPUtils.getC360AccessToken(coreApiToken);
+    let metadataRes = await CDPUtils.getC360Metadata(cdpAccesToken);
     if(this.flags.type == 'FIELD'){
       return this.extractFields(metadataRes.metadata);
     }
@@ -107,54 +90,8 @@ export default class Metadata extends SfdxCommand {
     // Return an object to be displayed with --json
     return metadataRes;
   }
-  private async getCoreApiJWTAccessToken(tokenUrl, params) {
-    try{
-      let urlParams = new url.URLSearchParams(params);
-      let response = await axios.post(tokenUrl, urlParams.toString());
-      if (response.status == 200) {
-        return response.data;
-      } else {
-        return null;
-      }
-    }catch(error){
-      this.ux.error(error.message);
-      return null;
-    }
-
-  }
 
 
-  private async getC360AccessToken(coreApiToken) {
-    let params = {
-      "grant_type": "urn:salesforce:grant-type:external:cdp",
-      "subject_token": coreApiToken.access_token,
-      "subject_token_type": "urn:ietf:params:oauth:token-type:access_token"
-    }
-    let urlParams = new url.URLSearchParams(params);
-    let tokenUrl = `${coreApiToken.instance_url}/services/a360/token`;
-    let response = await axios.post(tokenUrl, urlParams.toString());
-    if (response.status == 200) {
-      return response.data;
-    } else {
-      return null;
-    }
-
-  }
-
-
-  private async getC360Metadata(cdpToken) {
-    let apiEndpoint = `https://${cdpToken.instance_url}/api/v1/metadata/`;
-    let response = await axios.get(apiEndpoint, {
-      headers: {
-        "Authorization": `Bearer ${cdpToken.access_token}`
-      }
-    });
-    if (response.status == 200) {
-      return response.data;
-    } else {
-      return null;
-    }
-  }
 
   private async extractFields(entities) {
     let entityFields:any[] = new Array();
