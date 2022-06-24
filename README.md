@@ -50,16 +50,118 @@ sfdx cdp:login --username your_org_username@example.com
 
 ```
 
-### Examples
+### Output
 
+```
+JWT Token URL https://login.salesforce.com/services/oauth2/token
+
+
+Authenticated into core API
+
+Response field  Value
+──────────────  ─────────────────────────────────────────────────────────────────────
+scope           cdp_query_api cdp_ingest_api cdpquery api cdp_profile_api cdpprofile
+instance_url    https://mydomain.my.salesforce.com
+token_type      Bearer
+id              https://login.salesforce.com/id/00D5e00ty04hyf8EAA/0055e000rt6hIvCAAU
+access_token    0055e000rt6hIvCAAU!AR4A..
+
+
+Exchanged access_token for cdp_access_token
+
+Response field     Value
+─────────────────  ───────────────────────────────────────────────
+instance_url       mq2tszjzm0zw0yrvgzrwgmzyg1.c360a.salesforce.com
+token_type         Bearer
+issued_token_type  urn:ietf:params:oauth:token-type:jwt
+expires_in         7200
+access_token       eyJraWQiOiJDT1JFLjAw...
+
+```
 
 ## `metadata`
 
 ### Usage
 
-### Examples
+```
+sfdx cdp:metadata --username your_org_username@example.com 
+                  --clientid "3MVG9.." 
+                  --loginurl "https://login.salesforce.com" 
+                  --privatekey [absolute path to your private key file]
+                  --type 'ENTITY|FIELD`
+                  --filters `a string or comma separate filters to apply`
+
+```
+
+- `type` : This determines if you want to return entities or field level metadata. Alowed values are `ENTITY` or `FIELD`. `FIELD` is default
+- `filters`: This allows you to do a simple string filter based on what's in the parameter. You can use this to only pull specific tables, or tables matching a particular string.
+
+### Output
+
+Returning all Entities in CDP:
+
+```
+sfdx cdp:metadata --username your_org_username@example.com 
+                  --clientid "3MVG9.." 
+                  --loginurl "https://login.salesforce.com" 
+                  --privatekey [absolute path to your private key file]
+                  --type 'ENTITY`
+                  --filters `a string or comma separate filters to apply`
+
+Entity name                              API Name                                       Entity type
+───────────────────────────────────────  ─────────────────────────────────────────────  ───────────
+Base Events_dev                          base_events_dev__dll                           dll
+Cart Event Items_dev                     cart_event_items_dev__dll                      dll
+Cart Events_dev                          cart_events_dev__dll                           dll
+Catalog Events_dev                       catalog_events_dev__dll                        dll
+DEV_Account_00D010000008qWT              DEV_Account_00D010000008qWT__dll               dll
+...
+
+```
+
+Returning fields
+
+```
+Entity name                              Field name                              Datatype   API Name
+───────────────────────────────────────  ──────────────────────────────────────  ─────────  ───────────────────────────────────────
+Base Events_dev                          Action                                  STRING     action__c
+Base Events_dev                          cdp_sys_PartitionDate                   DATE_TIME  cdp_sys_PartitionDate__c
+Base Events_dev                          Customer ID                             STRING     customerId__c
+Base Events_dev                          Data Source                             STRING     DataSource__c
+Base Events_dev                          Data Source Object                      STRING     DataSourceObject__c
+Base Events_dev                          Email Address                           STRING     emailAddress__c
+Base Events_dev                          Event Date                              DATE_TIME  EventDate__c
+Base Events_dev                          Event Time                              DATE_TIME  eventTime__c
+
+...
+
+```
 
 
+Returning fields filtered to match `Account`
+
+```
+
+sfdx cdp:metadata --username your_org_username@example.com 
+                  --clientid "3MVG9.." 
+                  --loginurl "https://login.salesforce.com" 
+                  --privatekey [absolute path to your private key file]
+                  --filters `Account`
+
+Entity name                  Field name           Datatype  API Name
+───────────────────────────  ───────────────────  ────────  ────────────────────────
+DEV_Account_00D010000008qWT  Account Number       STRING    AccountNumber__c
+DEV_Account_00D010000008qWT  Account Source       STRING    AccountSource__c
+DEV_Account_00D010000008qWT  Account Description  STRING    Description__c
+DEV_Account_00D010000008qWT  Account Fax          STRING    Fax__c
+DEV_Account_00D010000008qWT  Account ID           STRING    Id__c
+DEV_Account_00D010000008qWT  Partner Account      STRING    IsPartner__c
+DEV_Account_00D010000008qWT  Is Person Account    STRING    IsPersonAccount__c
+DEV_Account_00D010000008qWT  Account Name         STRING    Name__c
+
+...
+
+```
 ## `export`
 
 ### Usage
