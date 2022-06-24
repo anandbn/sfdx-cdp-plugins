@@ -162,6 +162,34 @@ DEV_Account_00D010000008qWT  Account Name         STRING    Name__c
 ...
 
 ```
+
+
+## `query`
+
+### Usage
+
+```
+sfdx cdp:metadata --username your_org_username@example.com 
+                  --clientid "3MVG9.." 
+                  --loginurl "https://login.salesforce.com" 
+                  --privatekey [absolute path to your private key file]
+                  --query '[your SQL query]`
+
+```
+
+### Output
+
+```
+sfdx cdp:metadata --username your_org_username@example.com 
+                  --clientid "3MVG9.." 
+                  --loginurl "https://login.salesforce.com" 
+                  --privatekey [absolute path to your private key file]
+                  --query 'select count(*) as row_count from base_events_dev__dll`
+row_count
+─────────
+24104
+
+```
 ## `export`
 
 ### Usage

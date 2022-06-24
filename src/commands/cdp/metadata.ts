@@ -8,7 +8,6 @@ import * as os from 'os';
 import { flags, SfdxCommand, TableOptions } from '@salesforce/command';
 import { Messages } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
-const axios = require('axios').default;
 const url = require('url');
 import CDPUtils  from '../../shared/cdputils';
 
@@ -78,17 +77,28 @@ export default class Metadata extends SfdxCommand {
 
     var tokenUrl = new url.URL('/services/oauth2/token', this.flags.loginurl).toString();
 
-    let coreApiToken = await CDPUtils.getCoreApiJWTAccessToken(tokenUrl,params);
-    let cdpAccesToken = await CDPUtils.getC360AccessToken(coreApiToken);
-    let metadataRes = await CDPUtils.getC360Metadata(cdpAccesToken);
-    if(this.flags.type == 'FIELD'){
-      return this.extractFields(metadataRes.metadata);
+    try{
+      let coreApiToken = await CDPUtils.getCoreApiJWTAccessToken(tokenUrl,params);
+      let cdpAccesToken = await CDPUtils.getC360AccessToken(coreApiToken);
+      let metadataRes = await CDPUtils.getC360Metadata(cdpAccesToken);
+      if(this.flags.type == 'FIELD'){
+        return this.extractFields(metadataRes.metadata);
+      }
+      if(this.flags.type == 'ENTITY'){
+        return this.extractEntities(metadataRes.metadata);
+      }
+      // Return an object to be displayed with --json
+      return metadataRes;
+    }catch(error){
+      if(error.response && error.response.data){
+        this.ux.error(JSON.stringify(error.response.data,null,4));
+      }else{
+        this.ux.error(JSON.stringify(error,null,4));
+
+      }
     }
-    if(this.flags.type == 'ENTITY'){
-      return this.extractEntities(metadataRes.metadata);
-    }
-    // Return an object to be displayed with --json
-    return metadataRes;
+    return null;
+
   }
 
 

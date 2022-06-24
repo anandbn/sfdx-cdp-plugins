@@ -10,6 +10,8 @@ import { Messages } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
 const axios = require('axios').default;
 const YAML = require('yaml')
+import CDPUtils  from '../../shared/cdputils';
+import { createObjectCsvStringifier } from 'csv-writer';
 
 const jwt = require('jsonwebtoken');
 const url = require('url');
@@ -71,82 +73,28 @@ export default class Query extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
-    const clientId = this.flags.clientid;
-    const privateKey = require('fs').readFileSync(this.flags.privatekey, 'utf8');
+    var params = CDPUtils.getJwtParams(this.flags);
 
-    var jwtparams = {
-      iss: clientId,
-      prn: this.flags.username,
-      aud: this.flags.loginurl,
-      exp: (Math.floor(Date.now() / 1000) + (60 * 3))
-    };
-
-    var token = jwt.sign(jwtparams, privateKey, { algorithm: 'RS256' });
-
-    var params = {
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion: token
-    };
-
-    var tokenUrl = new url.URL('/services/oauth2/token', 'https://login.salesforce.com').toString();
-
-    let coreApiToken = await this.getCoreApiJWTAccessToken(tokenUrl, params);
-    let cdpAccesToken = await this.getC360AccessToken(coreApiToken);
-    return  this.executeQuery(cdpAccesToken);
-  }
-
-  private async getCoreApiJWTAccessToken(tokenUrl, params) {
-    let urlParams = new url.URLSearchParams(params);
-    let response = await axios.post(tokenUrl, urlParams.toString());
-    if (response.status == 200) {
-      return response.data;
-    } else {
-      return null;
-    }
-  }
-
-
-  private async getC360AccessToken(coreApiToken) {
-    let params = {
-      "grant_type": "urn:salesforce:grant-type:external:cdp",
-      "subject_token": coreApiToken.access_token,
-      "subject_token_type": "urn:ietf:params:oauth:token-type:access_token"
-    }
-    let urlParams = new url.URLSearchParams(params);
-    let tokenUrl = `${coreApiToken.instance_url}/services/a360/token`;
-    let response = await axios.post(tokenUrl, urlParams.toString());
-    if (response.status == 200) {
-      return response.data;
-    } else {
-      return null;
-    }
-
-  }
-  private async executeQuery(cdpAccessToken) {
-
-    let queryEndpoint = `https://${cdpAccessToken.instance_url}/api/v1/query`;
-    let queryJson = {
-      "sql": this.flags.query
-    }
+    var tokenUrl = new url.URL('/services/oauth2/token', this.flags.loginurl).toString();
     try{
-      let response = await axios.post(queryEndpoint, queryJson, {
-        headers: {
-          "Authorization": `Bearer ${cdpAccessToken.access_token}`
-        }
-      });
-      if (response.status == 200) {
-        this.formatAndOutputData(response.data);
-        return response.data;
-      } else {
-        return null;
-      }
-  
+      let coreApiToken = await CDPUtils.getCoreApiJWTAccessToken(tokenUrl,params);
+      let cdpAccesToken = await CDPUtils.getC360AccessToken(coreApiToken);
+      
+      let queryResponse = await CDPUtils.executeQuery(cdpAccesToken,this.flags.query);
+      this.formatAndOutputData(queryResponse);
+      return queryResponse;
     }catch(error){
-      this.ux.error(JSON.stringify(error));
-    }
+      if(error.response && error.response.data){
+        this.ux.error(JSON.stringify(error.response.data,null,4));
+      }else{
+        this.ux.error(JSON.stringify(error,null,4));
 
+      }
+    }
+    return null;
   }
 
+  
   private formatAndOutputData(queryResponse){
     let columns:any[] = new Array();
 
