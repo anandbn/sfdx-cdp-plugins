@@ -60,7 +60,12 @@ export default class Query extends SfdxCommand {
       char: 'q',
       description: messages.getMessage('query-queryDescription'),
       required: true
-    })
+    })/*,
+    limit: flags.string({
+      char: 'l',
+      description: messages.getMessage('query-limitDescription'),
+      required: true
+    })*/
   };
 
   // Comment this out if your command does not require an org username
@@ -79,10 +84,17 @@ export default class Query extends SfdxCommand {
     try{
       let coreApiToken = await CDPUtils.getCoreApiJWTAccessToken(tokenUrl,params);
       let cdpAccesToken = await CDPUtils.getC360AccessToken(coreApiToken);
-      
-      let queryResponse = await CDPUtils.executeQuery(cdpAccesToken,this.flags.query);
-      this.formatAndOutputData(queryResponse);
-      return queryResponse;
+      let offset = 0;
+      let hasRecords = true;
+      while(hasRecords){
+        let queryResponse = await CDPUtils.executeQuery(cdpAccesToken,this.flags.query,50000,offset);
+        this.formatAndOutputData(queryResponse);
+        offset +=50000;
+        hasRecords = !queryResponse.done;
+      }
+      return {
+        "status":"ok"
+      };
     }catch(error){
       if(error.response && error.response.data){
         this.ux.error(JSON.stringify(error.response.data,null,4));

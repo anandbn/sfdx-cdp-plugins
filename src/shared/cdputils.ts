@@ -72,11 +72,11 @@ export default class CDPUtils {
   }
 
 
-  static async executeQuery(cdpAccessToken, query) {
+  static async executeQuery(cdpAccessToken, query, limit, offset) {
 
     let queryEndpoint = `https://${cdpAccessToken.instance_url}/api/v1/query`;
     let queryJson = {
-      "sql": query
+      "sql": `${query} limit ${limit} offset ${offset}`
     }
     let response = await axios.post(queryEndpoint, queryJson, {
       headers: {

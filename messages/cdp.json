@@ -9,6 +9,12 @@
   "export-batchSizeFlagDescription": "Number of records per batch",
   "export-fileLocFlagDescription": "Path to store the CSV file",
   "export-entityFlagDescription": "Entity to use as the source for columns to export",
+  "export-startFromFlagDescription": "Start from row number",
+  "export-clientIdFlagDescription": "Client Id",
+  "export-clientSecretFlagDescription": "Client Secret",
+  "export-usernameFlagDescription": "Username",
+  "export-passwordFlagDescription": "Password",
+  "export-maxRecDescription": "Max records to extract",
   "export-examples": [
     "sfdx cdp:export --targetusername myOrg@example.com --query select * from Account"
   ],

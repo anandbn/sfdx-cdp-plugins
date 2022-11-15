@@ -114,6 +114,7 @@ export default class Metadata extends SfdxCommand {
             if(this.flags.filters == null || (this.flags.filters !=null && this.isEntityOrFieldInFilter(entityField.displayName,entityField.name))){
               entityFields.push({
                 entityName:entity.displayName,
+                entityApiName:entity.name,
                 fieldName:entityField.displayName,
                 fieldType:entityField.type,
                 fieldApiName:entityField.name,
@@ -127,6 +128,7 @@ export default class Metadata extends SfdxCommand {
     let tableColumns:TableOptions = {
       columns:[
       {key:'entityName',label: 'Entity name'},
+      {key:'entityApiName',label: 'Entity API name'},
       {key:'fieldName',label : 'Field name'},
       {key:'fieldType',label : 'Datatype'},
       {key:'fieldApiName',label : 'API Name'},
